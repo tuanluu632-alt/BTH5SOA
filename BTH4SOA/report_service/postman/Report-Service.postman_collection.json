@@ -1,0 +1,39 @@
+{
+  "info": {
+    "name": "BTH5 - Report Service",
+    "description": "Reports for inventory, sold quantities, revenue, costs and profit.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Đăng nhập bài 2",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"userName\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}", "options": {"raw": {"language": "json"}}},
+        "url": "{{authUrl}}/login/"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Login thành công', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "pm.expect(data.token).to.be.a('string');", "pm.environment.set('token', data.token);"]}}]
+    },
+    {
+      "name": "1. Tổng quan",
+      "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{reportUrl}}/reports/summary"}
+    },
+    {
+      "name": "2. Báo cáo theo sản phẩm",
+      "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{reportUrl}}/reports/products"}
+    },
+    {
+      "name": "3. Báo cáo theo đơn hàng",
+      "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{reportUrl}}/reports/orders"}
+    },
+    {
+      "name": "4. Lưu snapshot tổng quan",
+      "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{reportUrl}}/reports/snapshots"}
+    },
+    {
+      "name": "5. Xem snapshot đã lưu",
+      "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{reportUrl}}/reports/snapshots"}
+    }
+  ]
+}

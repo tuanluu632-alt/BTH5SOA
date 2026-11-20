@@ -1,0 +1,37 @@
+{
+  "info": {
+    "name": "Bài thực hành 4 - Order Management",
+    "description": "Import collection và environment. Chạy tuần tự: Login → CRUD order → CRUD order item. Cần chạy Auth service bài 2 và Product service bài 3.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://127.0.0.1:8002"},
+    {"key": "authUrl", "value": "http://127.0.0.1:8000"},
+    {"key": "username", "value": ""},
+    {"key": "password", "value": ""},
+    {"key": "token", "value": ""},
+    {"key": "productId", "value": "1"},
+    {"key": "orderId", "value": ""},
+    {"key": "itemId", "value": ""}
+  ],
+  "item": [
+    {"name": "0. Đăng nhập bài 2", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"userName\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}", "options": {"raw": {"language": "json"}}}, "url": "{{authUrl}}/login/"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Login thành công', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "pm.expect(data.token).to.be.a('string');", "pm.environment.set('token', data.token);"]}}]},
+    {"name": "1. Orders", "item": [
+    {"name": "POST tạo order (kiểm tra product/stock)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"customer_name\": \"Nguyen Van A\",\n  \"customer_email\": \"a@example.com\",\n  \"items\": [\n    {\"product_id\": {{productId}}, \"quantity\": 2}\n  ]\n}", "options": {"raw": {"language": "json"}}}, "url": "{{baseUrl}}/orders"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Tạo order thành công', function () { pm.response.to.have.status(201); });", "const data = pm.response.json();", "pm.test('Order có tổng tiền và item snapshot', function () { pm.expect(Number(data.total_amount)).to.be.above(0); pm.expect(data.items.length).to.be.above(0); });", "pm.environment.set('orderId', data.id);"]}}]},
+      {"name": "GET danh sách orders", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/orders"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Danh sách trả về 200', function () { pm.response.to.have.status(200); });"]}}]},
+      {"name": "GET order theo id", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/orders/{{orderId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Chi tiết order có item', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().items.length).to.be.above(0); });"]}}]},
+      {"name": "PUT cập nhật trạng thái order", "request": {"method": "PUT", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"status\":\"completed\"}", "options": {"raw": {"language": "json"}}}, "url": "{{baseUrl}}/orders/{{orderId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Trạng thái được cập nhật', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('completed'); });"]}}]},
+      {"name": "DELETE order", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/orders/{{orderId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Xóa order thành công', function () { pm.response.to.have.status(204); });", "pm.environment.unset('orderId');"]}}]}
+    ]},
+    {"name": "2. Order items", "item": [
+      {"name": "POST tạo order cho kiểm tra items", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"customer_name\":\"Nguyen Van B\",\"customer_email\":\"b@example.com\",\"items\":[{\"product_id\":{{productId}},\"quantity\":1}]}", "options": {"raw": {"language": "json"}}}, "url": "{{baseUrl}}/orders"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.response.to.have.status(201);", "pm.environment.set('orderId', pm.response.json().id);"]}}]},
+      {"name": "POST tạo order_item", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"order\":{{orderId}},\"product_id\":{{productId}},\"quantity\":1}", "options": {"raw": {"language": "json"}}}, "url": "{{baseUrl}}/order_items"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Tạo order item thành công', function () { pm.response.to.have.status(201); });", "pm.environment.set('itemId', pm.response.json().id);"]}}]},
+      {"name": "GET danh sách order_items", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/order_items"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Danh sách items trả về 200', function () { pm.response.to.have.status(200); });"]}}]},
+      {"name": "GET order_item theo id", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/order_items/{{itemId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Chi tiết item trả về 200', function () { pm.response.to.have.status(200); });"]}}]},
+      {"name": "PUT cập nhật order_item", "request": {"method": "PUT", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"quantity\":2}", "options": {"raw": {"language": "json"}}}, "url": "{{baseUrl}}/order_items/{{itemId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Cập nhật item và total_price', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().quantity).to.eql(2); });"]}}]},
+      {"name": "DELETE order_item", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/order_items/{{itemId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Xóa item thành công', function () { pm.response.to.have.status(204); });"]}}]},
+      {"name": "DELETE order kiểm tra items", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/orders/{{orderId}}"}, "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Dọn order kiểm tra', function () { pm.response.to.have.status(204); });"]}}]}
+    ]}
+  ]
+}
+
